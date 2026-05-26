@@ -159,14 +159,14 @@ function buildSvgTemplate({ userName, waifuName, claimDate, claimId }) {
 
   <!-- ═══ Main content (right of photo) ═══ -->
   <!-- "Dengan bangga menyatakan bahwa" label -->
-  <text x="360" y="140" text-anchor="middle"
+  <text x="490" y="140" text-anchor="middle"
         font-family="Georgia, serif" font-size="13" font-style="italic"
         fill="#c9a84c" letter-spacing="2" fill-opacity="0.9">
     — Dengan bangga menyatakan bahwa —
   </text>
 
   <!-- User name -->
-  <text x="360" y="195" text-anchor="middle"
+  <text x="490" y="195" text-anchor="middle"
         font-family="Georgia, serif" font-size="36" font-weight="bold"
         fill="white" filter="url(#textShadow)">
     ${safeUser}

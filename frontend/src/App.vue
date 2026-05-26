@@ -1,126 +1,138 @@
 <template>
   <div class="app">
-    <!-- ── Ambient particles ── -->
-    <div class="particles" aria-hidden="true">
-      <span v-for="i in 18" :key="i" class="particle" :style="particleStyle(i)" />
-    </div>
+    <!-- Interactive dot grid background -->
+    <div class="dot-grid" aria-hidden="true" />
 
-    <!-- ── Main card ── -->
-    <main class="card" :class="{ 'card--result': !!certificateUrl }">
+    <!-- Nav -->
+    <nav class="nav">
+      <span class="nav-logo">WaifuCert</span>
+      <span class="nav-tag">Beta</span>
+    </nav>
 
-      <!-- Header -->
-      <header class="card__header">
-        <div class="header-glyph">🏮</div>
-        <h1 class="header-title">Waifu Claim<span class="accent">Cert</span></h1>
-        <p class="header-sub">Klaim waifumu secara resmi &amp; legal ✨</p>
-      </header>
+    <!-- Main container -->
+    <main class="container">
 
       <!-- ── FORM STATE ── -->
-      <section v-if="!certificateUrl" class="form-section">
-        <div class="input-group">
-          <label class="label" for="userName">Nama Kamu</label>
-          <div class="input-wrap" :class="{ 'input-wrap--focused': focusedField === 'user' }">
-            <span class="input-icon">👤</span>
-            <input
-              id="userName"
-              v-model="userName"
-              type="text"
-              class="input"
-              placeholder="Masukkan namamu..."
-              autocomplete="off"
-              @focus="focusedField = 'user'"
-              @blur="focusedField = null"
-              @keydown.enter="handleGenerate"
-            />
-          </div>
-        </div>
+      <section v-if="!certificateUrl" class="panel">
+        <header class="panel__header">
+          <p class="overline">Sertifikasi Resmi</p>
+          <h1 class="headline">Klaim Waifumu<br />Secara Resmi</h1>
+          <p class="body-text">Masukkan namamu dan nama karakter waifu dari MyAnimeList — kami akan membuat sertifikat klaim resmi untukmu.</p>
+        </header>
 
-        <div class="input-group">
-          <label class="label" for="waifuName">Nama Waifu</label>
-          <div class="input-wrap" :class="{ 'input-wrap--focused': focusedField === 'waifu' }">
-            <span class="input-icon">🌸</span>
-            <input
-              id="waifuName"
-              v-model="waifuName"
-              type="text"
-              class="input"
-              placeholder="Misalnya: Zero Two, Rem..."
-              autocomplete="off"
-              @focus="focusedField = 'waifu'"
-              @blur="focusedField = null"
-              @keydown.enter="handleGenerate"
-            />
+        <div class="form">
+          <!-- Nama Kamu -->
+          <div class="field">
+            <label class="label" for="userName">Nama Kamu</label>
+            <div class="input-wrap" :class="{ 'input-wrap--focus': focusedField === 'user', 'input-wrap--error': !!error && !userName.trim() }">
+              <input
+                id="userName"
+                v-model="userName"
+                type="text"
+                class="input"
+                placeholder="Masukkan namamu..."
+                autocomplete="off"
+                @focus="focusedField = 'user'"
+                @blur="focusedField = null"
+                @keydown.enter="handleGenerate"
+              />
+            </div>
           </div>
-          <p class="input-hint">Nama karakter dari MyAnimeList akan dicari otomatis</p>
-        </div>
 
-        <!-- Error banner -->
-        <Transition name="slide-down">
-          <div v-if="error" class="error-banner" role="alert">
-            <span>⚠️</span>
-            <span>{{ error }}</span>
+          <!-- Nama Waifu -->
+          <div class="field">
+            <label class="label" for="waifuName">Nama Waifu</label>
+            <div class="input-wrap" :class="{ 'input-wrap--focus': focusedField === 'waifu', 'input-wrap--error': !!error && !waifuName.trim() }">
+              <input
+                id="waifuName"
+                v-model="waifuName"
+                type="text"
+                class="input"
+                placeholder="Misalnya: Zero Two, Rem, Miku..."
+                autocomplete="off"
+                @focus="focusedField = 'waifu'"
+                @blur="focusedField = null"
+                @keydown.enter="handleGenerate"
+              />
+            </div>
+            <p class="hint">Nama karakter dari MyAnimeList akan dicari otomatis</p>
           </div>
-        </Transition>
 
-        <!-- Claim button -->
-        <button
-          class="btn-claim"
-          :disabled="isLoading || !userName.trim() || !waifuName.trim()"
-          @click="handleGenerate"
-        >
-          <Transition name="fade" mode="out-in">
-            <!-- Loading state -->
-            <span v-if="isLoading" key="loading" class="btn-inner">
-              <span class="spinner" />
-              <span class="loading-text">{{ loadingStage }}</span>
-            </span>
-            <!-- Idle state -->
-            <span v-else key="idle" class="btn-inner">
-              <span class="btn-icon">🎌</span>
-              <span>Klaim Sekarang!</span>
-            </span>
+          <!-- Error banner -->
+          <Transition name="slide-down">
+            <div v-if="error" class="error-banner" role="alert">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v3M8 10.5v.5M1.5 13.5h13L8 2 1.5 13.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>{{ error }}</span>
+            </div>
           </Transition>
-        </button>
 
-        <!-- Loading skeleton preview -->
-        <Transition name="fade">
-          <div v-if="isLoading" class="skeleton-preview" aria-label="Sedang memproses...">
-            <div class="skeleton-bar skeleton-bar--short" />
-            <div class="skeleton-cert">
-              <div class="skeleton-photo" />
-              <div class="skeleton-lines">
-                <div class="skeleton-line skeleton-line--wide" />
-                <div class="skeleton-line skeleton-line--medium" />
-                <div class="skeleton-line skeleton-line--narrow" />
+          <!-- Loading skeleton -->
+          <Transition name="fade">
+            <div v-if="isLoading" class="skeleton-wrap" aria-label="Memproses...">
+              <div class="skeleton-row">
+                <div class="skeleton skeleton--avatar" />
+                <div class="skeleton-lines">
+                  <div class="skeleton skeleton--line" style="width:70%" />
+                  <div class="skeleton skeleton--line" style="width:50%" />
+                  <div class="skeleton skeleton--line" style="width:35%" />
+                </div>
+              </div>
+              <div class="loading-stage">
+                <div class="stage-dot" />
+                <span>{{ loadingStage }}</span>
               </div>
             </div>
-            <div class="skeleton-progress">
-              <div class="skeleton-progress-fill" />
-            </div>
-          </div>
-        </Transition>
+          </Transition>
+
+          <!-- CTA button -->
+          <button
+            class="btn-primary"
+            :disabled="isLoading || !userName.trim() || !waifuName.trim()"
+            @click="handleGenerate"
+          >
+            <Transition name="fade" mode="out-in">
+              <span v-if="isLoading" key="loading" class="btn-inner">
+                <span class="spinner" />
+                Memproses...
+              </span>
+              <span v-else key="idle" class="btn-inner">
+                Buat Sertifikat
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </Transition>
+          </button>
+        </div>
       </section>
 
       <!-- ── RESULT STATE ── -->
       <Transition name="zoom-in">
-        <section v-if="certificateUrl" class="result-section">
-          <div class="result-badge">🎉 Berhasil Diklaim!</div>
-          <div class="cert-preview-wrap">
+        <section v-if="certificateUrl" class="panel panel--result">
+          <div class="result-header">
+            <span class="status-chip status-chip--success">
+              <span class="status-dot" />
+              Berhasil Dibuat
+            </span>
+            <h2 class="subhead">Sertifikat Siap</h2>
+            <p class="body-text">Sertifikat klaim resmi kamu sudah siap. Unduh dan simpan sebagai bukti sahmu!</p>
+          </div>
+
+          <div class="cert-frame">
             <img
               :src="certificateUrl"
               alt="Sertifikat Hak Klaim Waifu"
               class="cert-image"
-              @load="certImageLoaded = true"
             />
-            <div class="cert-shimmer" />
           </div>
 
           <div class="result-actions">
-            <button class="btn-download" @click="download(`waifu-cert-${waifuName}.png`)">
-              <span>⬇️</span> Unduh Sertifikat
+            <button class="btn-primary" @click="download(`waifu-cert-${waifuName}.png`)">
+              <span class="btn-inner">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 11v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Unduh Sertifikat
+              </span>
             </button>
-            <button class="btn-secondary" @click="handleReset">
-              <span>🔄</span> Klaim Lagi
+            <button class="btn-ghost" @click="handleReset">
+              Klaim Lagi
             </button>
           </div>
         </section>
@@ -129,8 +141,8 @@
     </main>
 
     <!-- Footer -->
-    <footer class="app-footer">
-      Powered by MyAnimeList • waifu.pics • Sharp.js
+    <footer class="footer">
+      <span>Powered by MyAnimeList · waifu.pics · Sharp.js</span>
     </footer>
   </div>
 </template>
@@ -139,10 +151,9 @@
 import { ref } from 'vue';
 import { useCertificate } from './composables/useCertificate.js';
 
-const userName   = ref('');
-const waifuName  = ref('');
+const userName     = ref('');
+const waifuName    = ref('');
 const focusedField = ref(null);
-const certImageLoaded = ref(false);
 
 const { isLoading, loadingStage, error, certificateUrl, generate, download, reset } = useCertificate();
 
@@ -153,391 +164,479 @@ async function handleGenerate() {
 
 function handleReset() {
   reset();
-  certImageLoaded.value = false;
-}
-
-// Pseudo-random but deterministic particle positions from index
-function particleStyle(i) {
-  const x = ((i * 37 + 11) % 97);
-  const y = ((i * 53 + 7)  % 93);
-  const s = 0.4 + (i % 5) * 0.2;
-  const d = (i * 0.7).toFixed(1);
-  const dur = 4 + (i % 6);
-  return {
-    left: `${x}%`,
-    top:  `${y}%`,
-    transform: `scale(${s})`,
-    animationDelay: `${d}s`,
-    animationDuration: `${dur}s`,
-  };
 }
 </script>
 
 <style>
 /* ─── Fonts ──────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;600&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
 
-/* ─── CSS Variables ──────────────────────────────────── */
+/* ─── Design Tokens ──────────────────────────────────── */
 :root {
-  --bg:         #07060f;
-  --surface:    #110d22;
-  --surface2:   #1a1133;
-  --border:     rgba(196,160,80,0.25);
-  --gold:       #c9a84c;
-  --gold-light: #f5d78e;
-  --pink:       #ff6bab;
-  --pink-light: #ff9de2;
-  --purple:     #9b59b6;
-  --text:       #f0e8ff;
-  --text-muted: #8a7fa0;
-  --radius:     20px;
-  --shadow:     0 24px 80px rgba(0,0,0,0.7);
+  /* Colors */
+  --primary:        #6366F1;
+  --primary-hover:  #4F46E5;
+  --neutral:        #9C9C9C;
+  --bg:             #FAFAFA;
+  --surface:        #FFFFFF;
+  --text-primary:   #0A0A0A;
+  --text-secondary: #6B6B6B;
+  --border:         #E8E8EC;
+  --success:        #10B981;
+  --warning:        #F59E0B;
+  --error:          #EF4444;
+
+  /* Typography */
+  --font-display: 'General Sans', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Radius */
+  --radius-sm:   4px;
+  --radius-btn:  6px;
+  --radius-card: 12px;
+  --radius-full: 9999px;
+
+  /* Elevation */
+  --shadow-hover: 0 8px 30px rgba(0,0,0,0.08);
+  --shadow-focus: 0 0 0 3px rgba(99,102,241,0.12);
+  --shadow-btn:   0 4px 12px rgba(99,102,241,0.35);
 }
 
 /* ─── Reset ──────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  font-family: 'Noto Sans JP', sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
-  color: var(--text);
+  color: var(--text-primary);
   min-height: 100dvh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ─── App layout ─────────────────────────────────────── */
+/* ─── Dot Grid Background ────────────────────────────── */
+.dot-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(circle, #D1D5DB 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.45;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+/* ─── App Layout ─────────────────────────────────────── */
 .app {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
   position: relative;
 }
 
-/* ─── Particles ──────────────────────────────────────── */
-.particles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
-.particle {
-  position: absolute;
-  width: 6px; height: 6px;
-  background: radial-gradient(circle, var(--pink-light), transparent);
-  border-radius: 50%;
-  opacity: 0;
-  animation: float linear infinite;
-}
-@keyframes float {
-  0%   { opacity: 0; transform: translateY(20px) scale(var(--s, 1)); }
-  20%  { opacity: 0.6; }
-  80%  { opacity: 0.3; }
-  100% { opacity: 0; transform: translateY(-60px) scale(var(--s, 1)); }
-}
-
-/* ─── Card ───────────────────────────────────────────── */
-.card {
-  position: relative; z-index: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow), 0 0 0 1px rgba(255,107,171,0.08) inset;
+/* ─── Nav ────────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   width: 100%;
-  max-width: 520px;
-  overflow: hidden;
-  transition: max-width 0.5s cubic-bezier(0.34,1.56,0.64,1);
-}
-.card--result { max-width: 660px; }
-
-/* ─── Card Header ────────────────────────────────────── */
-.card__header {
-  padding: 2.4rem 2rem 2rem;
-  text-align: center;
-  background: linear-gradient(180deg, #1e0535 0%, transparent 100%);
-  border-bottom: 1px solid var(--border);
-}
-.header-glyph { font-size: 2.8rem; line-height: 1; margin-bottom: 0.5rem; }
-.header-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 2.2rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: var(--text);
-}
-.header-title .accent { color: var(--pink); }
-.header-sub {
-  margin-top: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-}
-
-/* ─── Form Section ───────────────────────────────────── */
-.form-section { padding: 2rem; display: flex; flex-direction: column; gap: 1.4rem; }
-
-.input-group { display: flex; flex-direction: column; gap: 0.5rem; }
-.label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.input-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
-
-.input-wrap {
+  height: 56px;
   display: flex;
   align-items: center;
-  background: var(--surface2);
-  border: 1.5px solid rgba(196,160,80,0.2);
-  border-radius: 12px;
-  padding: 0 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  gap: 8px;
+  padding: 0 24px;
+  background: rgba(250,250,250,0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  max-width: 1280px;
+  margin: 0 auto;
 }
-.input-wrap--focused {
-  border-color: var(--pink);
-  box-shadow: 0 0 0 3px rgba(255,107,171,0.15);
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
 }
-.input-icon { font-size: 1.1rem; margin-right: 0.6rem; flex-shrink: 0; }
-.input {
+
+.nav-tag {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  background: rgba(99,102,241,0.08);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(99,102,241,0.2);
+}
+
+/* ─── Container ──────────────────────────────────────── */
+.container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 64px 24px 40px;
   flex: 1;
-  background: none;
+}
+
+/* ─── Panel (Card) ───────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.panel:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+.panel--result {
+  max-width: 580px;
+  width: 100%;
+}
+
+/* ─── Panel Header ───────────────────────────────────── */
+.panel__header {
+  padding: 32px 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── Typography ─────────────────────────────────────── */
+.overline {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.subhead {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.body-text {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ─── Form ───────────────────────────────────────────── */
+.form {
+  padding: 24px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--neutral);
+}
+
+/* ─── Input ──────────────────────────────────────────── */
+.input-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  background: var(--surface);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.input-wrap--focus {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-focus);
+}
+.input-wrap--error {
+  border-color: var(--error);
+}
+
+.input {
+  width: 100%;
+  background: transparent;
   border: none;
   outline: none;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  color: var(--text);
-  padding: 0.9rem 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: var(--radius-btn);
 }
-.input::placeholder { color: var(--text-muted); }
+.input::placeholder {
+  color: var(--neutral);
+}
 
 /* ─── Error Banner ───────────────────────────────────── */
 .error-banner {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  background: rgba(255,80,80,0.12);
-  border: 1px solid rgba(255,80,80,0.3);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
-  color: #ff8585;
+  gap: 8px;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-btn);
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--error);
 }
 
-/* ─── Claim Button ───────────────────────────────────── */
-.btn-claim {
-  width: 100%;
-  padding: 1rem;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #d4156e 0%, #ff6bab 50%, #d4156e 100%);
-  background-size: 200% 200%;
-  color: white;
-  font-family: 'Playfair Display', serif;
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 24px rgba(255,107,171,0.35);
-  animation: btnShimmer 3s ease infinite;
-}
-@keyframes btnShimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50%       { background-position: 100% 50%; }
-}
-.btn-claim:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(255,107,171,0.5);
-}
-.btn-claim:active:not(:disabled) { transform: translateY(0); }
-.btn-claim:disabled { opacity: 0.55; cursor: not-allowed; }
-
-.btn-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-.btn-icon { font-size: 1.2rem; }
-
-/* ─── Spinner ────────────────────────────────────────── */
-.spinner {
-  width: 18px; height: 18px;
-  border: 2.5px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  flex-shrink: 0;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.loading-text {
-  font-size: 0.88rem;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  min-width: 240px;
-  text-align: left;
-}
-
-/* ─── Skeleton Preview ───────────────────────────────── */
-.skeleton-preview {
-  background: var(--surface2);
-  border: 1px dashed rgba(196,160,80,0.2);
-  border-radius: 14px;
-  padding: 1.2rem;
+/* ─── Skeleton ───────────────────────────────────────── */
+.skeleton-wrap {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 12px;
 }
-.skeleton-bar {
-  height: 10px;
-  background: linear-gradient(90deg, var(--surface2) 25%, rgba(255,107,171,0.15) 50%, var(--surface2) 75%);
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.skeleton {
+  background: linear-gradient(90deg, #E8E8EC 25%, #F4F4F6 50%, #E8E8EC 75%);
   background-size: 200% 100%;
-  border-radius: 99px;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius-sm);
 }
-.skeleton-bar--short { width: 55%; }
-.skeleton-cert { display: flex; gap: 1rem; align-items: center; }
-.skeleton-photo {
-  width: 64px; height: 64px;
-  border-radius: 50%;
+.skeleton--avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
-  background: linear-gradient(90deg, var(--surface2) 25%, rgba(255,107,171,0.15) 50%, var(--surface2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite 0.1s;
 }
-.skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.skeleton-line {
-  height: 10px; border-radius: 99px;
-  background: linear-gradient(90deg, var(--surface2) 25%, rgba(255,107,171,0.15) 50%, var(--surface2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.skeleton-line--wide   { width: 85%; animation-delay: 0.05s; }
-.skeleton-line--medium { width: 65%; animation-delay: 0.1s; }
-.skeleton-line--narrow { width: 45%; animation-delay: 0.15s; }
-.skeleton-progress {
-  height: 5px; border-radius: 99px;
-  background: rgba(255,255,255,0.06);
-  overflow: hidden;
-}
-.skeleton-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, transparent, var(--pink), transparent);
-  animation: progress 1.8s ease-in-out infinite;
-}
-@keyframes progress {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
+.skeleton--line {
+  height: 10px;
+  border-radius: var(--radius-sm);
 }
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* ─── Result Section ─────────────────────────────────── */
-.result-section {
-  padding: 2rem;
+.loading-stage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.stage-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  animation: pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+/* ─── Buttons ────────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  height: 44px;
+  padding: 0 24px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms, transform 150ms, box-shadow 150ms;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-btn);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  width: 100%;
+  height: 44px;
+  padding: 0 24px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 150ms, transform 150ms;
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ─── Spinner ────────────────────────────────────────── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Status Chip ────────────────────────────────────── */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-chip--success {
+  background: rgba(16,185,129,0.08);
+  color: var(--success);
+  border: 1px solid rgba(16,185,129,0.2);
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+/* ─── Result ─────────────────────────────────────────── */
+.result-header {
+  padding: 32px 32px 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
+  gap: 12px;
 }
-.result-badge {
-  background: linear-gradient(135deg, #c9a84c, #f5d78e);
-  color: #1a0d2e;
-  font-family: 'Playfair Display', serif;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 0.4rem 1.4rem;
-  border-radius: 99px;
-  letter-spacing: 0.05em;
-}
-.cert-preview-wrap {
-  position: relative;
-  width: 100%;
-  border-radius: 14px;
+
+.cert-frame {
+  margin: 24px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: 0 0 40px rgba(255,107,171,0.25), 0 0 0 1px var(--border);
+  transition: box-shadow 200ms;
+}
+.cert-frame:hover {
+  box-shadow: var(--shadow-hover);
 }
 .cert-image {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 14px;
 }
-.cert-shimmer {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
-  animation: certShimmer 3s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes certShimmer {
-  0%, 100% { transform: translateX(-100%); }
-  50%       { transform: translateX(100%); }
-}
+
 .result-actions {
+  padding: 0 32px 32px;
   display: flex;
-  gap: 0.8rem;
-  width: 100%;
+  flex-direction: column;
+  gap: 8px;
 }
-.btn-download, .btn-secondary {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.85rem 1rem;
-  border-radius: 12px;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.2s;
-  border: none;
-}
-.btn-download {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-  color: #1a0d2e;
-  box-shadow: 0 4px 20px rgba(201,168,76,0.3);
-}
-.btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(201,168,76,0.45); }
-.btn-secondary {
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  color: var(--text);
-}
-.btn-secondary:hover { border-color: var(--pink); color: var(--pink); }
 
 /* ─── Footer ─────────────────────────────────────────── */
-.app-footer {
-  margin-top: 2rem;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  text-align: center;
-  letter-spacing: 0.1em;
-  opacity: 0.5;
+.footer {
+  position: relative;
   z-index: 1;
+  padding: 32px 24px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--neutral);
+  text-align: center;
+  letter-spacing: 0.02em;
 }
 
 /* ─── Vue Transitions ────────────────────────────────── */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s, transform 0.3s; }
-.fade-enter-from { opacity: 0; transform: translateY(6px); }
-.fade-leave-to   { opacity: 0; transform: translateY(-6px); }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s, transform 0.25s; }
+.fade-enter-from { opacity: 0; transform: translateY(4px); }
+.fade-leave-to   { opacity: 0; transform: translateY(-4px); }
 
-.slide-down-enter-active, .slide-down-leave-active { transition: all 0.3s; }
-.slide-down-enter-from { opacity: 0; transform: translateY(-10px); max-height: 0; }
-.slide-down-leave-to   { opacity: 0; transform: translateY(-10px); max-height: 0; }
+.slide-down-enter-active, .slide-down-leave-active { transition: opacity 0.25s, transform 0.25s; }
+.slide-down-enter-from { opacity: 0; transform: translateY(-8px); }
+.slide-down-leave-to   { opacity: 0; transform: translateY(-8px); }
 
-.zoom-in-enter-active { transition: all 0.5s cubic-bezier(0.34,1.56,0.64,1); }
-.zoom-in-enter-from   { opacity: 0; transform: scale(0.92); }
+.zoom-in-enter-active { transition: all 0.4s cubic-bezier(0.34,1.4,0.64,1); }
+.zoom-in-enter-from   { opacity: 0; transform: scale(0.94) translateY(8px); }
 .zoom-in-leave-active { transition: all 0.2s ease-in; }
-.zoom-in-leave-to     { opacity: 0; transform: scale(0.96); }
+.zoom-in-leave-to     { opacity: 0; transform: scale(0.97); }
 
 /* ─── Responsive ─────────────────────────────────────── */
-@media (max-width: 480px) {
-  .header-title { font-size: 1.7rem; }
-  .result-actions { flex-direction: column; }
-  .loading-text { min-width: 0; }
+@media (max-width: 540px) {
+  .container { padding: 32px 16px 32px; }
+  .panel__header { padding: 24px 20px 0; }
+  .form { padding: 20px 20px 24px; }
+  .result-header { padding: 24px 20px 0; }
+  .cert-frame { margin: 20px; }
+  .result-actions { padding: 0 20px 24px; }
+  .headline { font-size: 26px; }
 }
 </style>
