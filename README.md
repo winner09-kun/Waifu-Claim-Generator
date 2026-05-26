@@ -4,34 +4,6 @@ Generate sertifikat resmi klaim waifu dengan foto dari MyAnimeList!
 
 ---
 
-## 🗂 Struktur Folder (Clean Architecture)
-
-```
-waifu-cert/
-├── backend/
-│   ├── src/
-│   │   ├── index.js                    ← Entry point Express
-│   │   ├── routes/
-│   │   │   └── certificate.routes.js   ← Definisi endpoint
-│   │   ├── controllers/
-│   │   │   └── certificate.controller.js ← Validasi input & HTTP response
-│   │   ├── services/
-│   │   │   ├── certificate.service.js  ← Orkestrasi bisnis logic
-│   │   │   └── waifuFetcher.service.js ← Fetch gambar dari Jikan/waifu.pics
-│   │   └── utils/
-│   │       └── certificateBuilder.js  ← Komposisi gambar dengan Sharp
-│   └── package.json
-│
-└── frontend/
-    ├── src/
-    │   ├── main.js                    ← Vue entry point
-    │   ├── App.vue                    ← UI utama (form + loading + result)
-    │   └── composables/
-    │       └── useCertificate.js      ← API call logic (reusable)
-    ├── index.html
-    └── vite.config.js
-```
-
 ### Layer Responsibilities
 
 | Layer | File | Tanggung Jawab |
